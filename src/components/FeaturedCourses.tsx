@@ -1,7 +1,9 @@
 "use client";
+import React, { useState } from "react";
 import Link from "next/link";
 import courseData from "../data/music_courses.json";
-import { BackgroundGradient } from "./ui/background-gradient";
+import { CourseCard } from "./CourseCard";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Course {
   id: number;
@@ -11,61 +13,90 @@ interface Course {
   price: number;
   instructor: string;
   isFeatured: boolean;
+  category: string;
 }
 
 function FeaturedCourses() {
-  const featuredCourses = courseData.courses.filter(
-    (course: Course) => course.isFeatured
-  );
+  const [activeCategory, setActiveCategory] = useState("All");
+  
+  const categories = ["All", "Instrumental", "Vocal", "Production", "Theory"];
+  
+  const filteredCourses = courseData.courses.filter((course: Course) => {
+    if (activeCategory === "All") return course.isFeatured;
+    return course.isFeatured && course.category === activeCategory;
+  });
 
   return (
-    <div className="py-12 bg-gray-900">
-      <div>
-        <div className="text-center">
-          <h2 className="text-base text-teal-600 font-semibold tracking-wide uppercase">
-            FEATURED COURSES
-          </h2>
-          <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-white sm:text-4xl">
-            Learn With the Best
-          </p>
+    <section className="py-24 relative overflow-hidden bg-background">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-16">
+          <motion.span 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            className="text-primary font-bold tracking-widest uppercase text-sm mb-4 block"
+          >
+            Explore our curriculum
+          </motion.span>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-5xl font-heading font-bold mb-6"
+          >
+            Featured Courses
+          </motion.h2>
+          
+          {/* Category Filters */}
+          <div className="flex flex-wrap justify-center gap-4 mt-10">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                  activeCategory === cat
+                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                    : "bg-white/5 text-neutral-400 hover:bg-white/10"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <AnimatePresence mode="popLayout">
+            {filteredCourses.map((course: Course) => (
+              <motion.div
+                key={course.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.3 }}
+              >
+                <CourseCard course={course} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        <div className="mt-20 text-center">
+          <Link
+            href="/courses"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-white/5 border border-white/10 rounded-full font-bold hover:bg-white/10 transition-all group"
+          >
+            View All Courses
+            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
       </div>
-      <div className="mt-10 mx-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
-          {featuredCourses.map((course: Course) => (
-            <div key={course.id} className="flex justify-center">
-              <BackgroundGradient className="flex flex-col rounded-[22px] bg-white dark:bg-zinc-900 overflow-hidden h-full max-w-sm">
-                <div className="p-4 sm:p-6 flex flex-col items-center text-center flex-grow">
-                  <p className="text-lg sm:text-xl text-black mt-4 mb-2 dark:text-neutral-200">
-                    {course.title}
-                  </p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 flex-grow">
-                    {course.description}
-                  </p>
-                  <Link
-                    href={`/courses/${course.slug}`}
-                    // className="mt-5 px-4 py-2 rounded border border-neutral-600 text-neutral-700 bg-white hover:bg-gray-100 transition duration-200"
-                    className="mt-5 px-6 py-3 rounded-lg bg-teal-500 text-white font-medium hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
-                  >
-                    Learn More
-                  </Link>
-                </div>
-              </BackgroundGradient>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="mt-20 text-center">
-        <Link
-          href={"/courses"}
-          // className="px-4 py-2 rounded border border-neutral-600 text-neutral-700 bg-white hover:bg-gray-100 transition duration-200"
-          className="mt-5 px-6 py-3 rounded-lg bg-teal-500 text-white font-medium hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
-        >
-          View All courses
-        </Link>
-      </div>
-    </div>
+    </section>
   );
 }
+
+// Dummy ArrowRight for compilation if lucide-react not imported in this file
+import { ArrowRight } from "lucide-react";
 
 export default FeaturedCourses;
